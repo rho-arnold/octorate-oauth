@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>rho.cl · Conexión con Octorate</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; max-width: 34rem; margin: 3rem auto; padding: 0 1.2rem; color: #222; }
+  h1 { font-size: 1.3rem; }
+  p { line-height: 1.5; }
+  .ok { color: #1a7f37; } .err { color: #b3261e; }
+</style>
+</head>
+<body>
+<h1>rho.cl · Conexión con Octorate</h1>
+<p id="msg">Procesando…</p>
+<script>
+// Página puente de la autorización OAuth de Octorate (rho.cl, 18-nov-2026).
+// No guarda ni muestra claves: toma el código de un solo uso de la dirección y se lo pasa al instante
+// a la función de Kapso "octorate-oauth", que hace el intercambio por tokens (el código vence en segundos).
+(function () {
+  var FN = "https://api.kapso.ai/platform/v1/functions/56b32a54-aab5-44ea-91d6-6aa6d7897ce1/invoke";
+  var q = new URLSearchParams(location.search);
+  var code = q.get("code"), state = q.get("state"), error = q.get("error");
+  var msg = document.getElementById("msg");
+  if (history.replaceState) history.replaceState(null, "", location.pathname); // saca el código de la barra de direcciones
+  if (error) { msg.className = "err"; msg.textContent = "Octorate no autorizó la conexión (" + error + "). Puedes cerrar esta página."; return; }
+  if (!code || !state) { msg.textContent = "Esta página solo recibe la autorización de Octorate."; return; }
+  fetch(FN, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ accion: "codigo", code: code, state: state }) })
+    .then(function () { msg.className = "ok"; msg.textContent = "Autorización enviada. Ya puedes cerrar esta página y avisarle a Claude para que confirme la conexión."; })
+    .catch(function () { msg.className = "err"; msg.textContent = "No se pudo enviar la autorización. Avísale a Claude."; });
+})();
+</script>
+</body>
+</html>
